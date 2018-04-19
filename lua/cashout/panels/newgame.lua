@@ -46,11 +46,11 @@ function PANEL:Init()
         s:SetColor(Color(255,255,255))
     end
 
-    function self.btnClose:Paint(w,h)
+    --[[function self.btnClose:Paint(w,h)
         self.alpha = Lerp(0.05,self.alpha,self.Hovered and 255 or 128)
         draw.RoundedBox(0,0,2,w,20,Color(244,67,54,self.alpha))
         draw.SimpleText("r", "Marlett", w/2, h/2, Color(255,255,255,self.alpha), 1, 1)
-    end
+    end--]]
 
     self:SetupCategories()
     self:SetupMaps("Sandbox")
@@ -120,9 +120,11 @@ function PANEL:SetupSettings()
     self.sp.DoClick = function(p)
         if self.SelectedMap == "" then return end
         RunGameUICommand("disconnect")
-        RunConsoleCommand("hostname",hostname:GetValue())
-        RunConsoleCommand("maxplayers",1)
-        RunConsoleCommand("map",self.SelectedMap)
+        timer.Simple(0.1, function()
+            RunConsoleCommand("hostname",hostname:GetValue())
+            RunConsoleCommand("maxplayers",1)
+            RunConsoleCommand("map",self.SelectedMap)
+        end)
 
         self:Remove()
     end
@@ -138,9 +140,11 @@ function PANEL:SetupSettings()
     self.mp.DoClick = function(p)
         if self.SelectedMap == "" then return end
         RunGameUICommand("disconnect")
-        RunConsoleCommand("hostname",hostname:GetValue())
-        RunConsoleCommand("maxplayers",maxplayers:GetValue())
-        RunConsoleCommand("map",self.SelectedMap)
+        timer.Simple(0.1, function()
+            RunConsoleCommand("hostname",hostname:GetValue())
+            RunConsoleCommand("maxplayers",maxplayers:GetValue())
+            RunConsoleCommand("map",self.SelectedMap)
+        end)
 
         self:Remove()
     end
@@ -172,8 +176,11 @@ function PANEL:SetupMaps(cat)
     for _,v in SortedPairs(GetMapList()[cat]) do
         self.MapList:Add(self:CreateMapIcon(v))
     end
-    self.List:InvalidateLayout()
-    self.List:PerformLayout()
+    timer.Simple(0,function()
+        self.MapList:SizeToContents()
+        self.List:InvalidateLayout()
+        self.List:PerformLayout()
+    end)
     self.List.VBar:AnimateTo( 0, 0.5, 0, 0.5 )
 end
 
@@ -201,10 +208,10 @@ function PANEL:CreateMapIcon(name)
     return map
 end
 
-function PANEL:Paint(w,h)
+--[[function PANEL:Paint(w,h)
     draw.RoundedBox(0,0,0,w,h,Color(0,0,0,240))
     draw.RoundedBox(0,0,0,w,24,Color(0,96,192))
-end
+end--]]
 
 vgui.Register( "CashoutNewGame", PANEL, "DFrame" )
 

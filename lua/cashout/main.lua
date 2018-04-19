@@ -2,6 +2,7 @@ include("background.lua")
 include("panels/mounts.lua")
 include("panels/newgame.lua")
 include("panels/addons.lua")
+include("panels/servers.lua")
 
 surface.CreateFont("Cashout_GModLogo",{
 	font = "Coolvetica",
@@ -71,7 +72,8 @@ end
 function btnPlay:DoClick()
     local dmenu = DermaMenu()
     dmenu:AddOption("Singleplayer",function() CashoutNewGame() end):SetIcon("icon16/world_add.png")
-    dmenu:AddOption("Multiplayer",function() RunGameUICommand("openserverbrowser") end):SetIcon("icon16/group.png")
+    dmenu:AddOption("Multiplayer",function() CashoutServers() end):SetIcon("icon16/group.png")
+    dmenu:AddOption("Valve Browser",function() RunGameUICommand("openserverbrowser") end):SetIcon("icon16/server_database.png")
     dmenu:Open()
     surface.SetFont("Cashout_GModLogo")
     dmenu:SetPos(62+surface.GetTextSize("garry's mod")+100,56)
@@ -112,26 +114,15 @@ function btnOptions:Paint(w,h)
     surface.DrawLine(w-1, 0, w-1, h)
 end
 
-function btnOptions:DoClick() RunGameUICommand("openoptionsdialog") end
-
-local btnMounts = vgui.Create("DButton", nav)
-btnMounts:Dock(LEFT)
-btnMounts:SetWide(192)
-btnMounts:SetText("")
-btnMounts.alpha = 128
-
-function btnMounts:Paint(w,h)
-    self.alpha = Lerp(0.05,self.alpha,self.Hovered and 128 or 0)
-    draw.RoundedBox(0,0,0,w,h,Color(192,0,255,self.alpha))
-    draw.SimpleText("Game Content", "DermaLarge", w/2, h/2, Color(255,255,255,self.alpha+127), 1, 1)
-
-    surface.SetDrawColor(Color(255,255,255,self.alpha+127))
-    surface.DrawLine(0, 0, 0, h)
-    surface.DrawLine(w-1, 0, w-1, h)
-    surface.DrawLine(w-2, 0, w-2, h)
+function btnOptions:DoClick()
+    local dmenu = DermaMenu()
+    dmenu:AddOption("Game Settings",function() RunGameUICommand("openoptionsdialog") end):SetIcon("icon16/wrench.png")
+    dmenu:AddOption("#mounted_games",function() CashoutOpenMounts() end):SetIcon("icon16/controller.png")
+    dmenu:Open()
+    surface.SetFont("Cashout_GModLogo")
+    dmenu:SetPos(62+surface.GetTextSize("garry's mod")+100+(192*2),56)
+    dmenu:SetWide(192)
 end
-
-function btnMounts:DoClick() CashoutOpenMounts() end
 
 local exit = vgui.Create("DButton", nav)
 exit:Dock(RIGHT)

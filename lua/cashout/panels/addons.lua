@@ -25,11 +25,11 @@ function PANEL:Init()
         s:SetColor(Color(255,255,255))
     end
 
-    function self.btnClose:Paint(w,h)
+    --[[function self.btnClose:Paint(w,h)
         self.alpha = Lerp(0.05,self.alpha,self.Hovered and 255 or 128)
         draw.RoundedBox(0,0,2,w,20,Color(244,67,54,self.alpha))
         draw.SimpleText("r", "Marlett", w/2, h/2, Color(255,255,255,self.alpha), 1, 1)
-    end
+    end--]]
 
     self.EnableAll = vgui.Create("DButton",self.Side)
 	self.EnableAll:SetText("#addons.enableall")
@@ -135,12 +135,12 @@ function PANEL:CreateAddonInfo(data)
 				data.mounted = new
 
 				if new == true then
-					mnt:SetIcon("icon16/cross.png")
-					mnt:SetText("Disable")
+					s:SetIcon("icon16/cross.png")
+					s:SetText("Disable")
 					pnl:SetBackgroundColor(Color(128,192,128))
 				else
-					mnt:SetIcon("icon16/tick.png")
-					mnt:SetText("Enable")
+					s:SetIcon("icon16/tick.png")
+					s:SetText("Enable")
 					pnl:SetBackgroundColor(Color(255,255,255))
 				end
 			end
@@ -157,7 +157,7 @@ function PANEL:CreateAddonInfo(data)
 			print("Unsubscribe",data.wsid)
 			steamworks.Unsubscribe(data.wsid)
 			pnl:Remove()
-			scroll:PerformLayout()
+			self.List:PerformLayout()
 		end
 
 		local ws = vgui.Create("DButton",pnl)
@@ -180,10 +180,10 @@ function PANEL:CreateAddonInfo(data)
 		self.List:Add(pnl)
 	end
 
-function PANEL:Paint(w,h)
+--[[function PANEL:Paint(w,h)
     draw.RoundedBox(0,0,0,w,h,Color(0,0,0,240))
     draw.RoundedBox(0,0,0,w,24,Color(0,128,0))
-end
+end--]]
 
 vgui.Register( "CashoutAddons", PANEL, "DFrame" )
 

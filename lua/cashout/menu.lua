@@ -1,4 +1,4 @@
-_G.CASHOUT_VERSION = "1.0.0-dev"
+_G.CASHOUT_VERSION = "1.0.1-dev"
 
 -- Menu Functionality and Requirements
 --include("menu/mount/mount.lua") -- Workshop
@@ -15,6 +15,8 @@ include("cashout/loadingscreen.lua")
 include("cashout/main.lua")
 include("cashout/dev.lua") -- Developer tools like lua_find_menu and lua_run_menu
 include("cashout/workshop.lua") -- Custom workshop status
+
+include("cashout/plugins.lua")
 
 print("Loaded Cashout v"..CASHOUT_VERSION)
 concommand.Add("menu_reloadx", function()

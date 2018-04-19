@@ -4,6 +4,8 @@ g_ServerURL  = ""
 g_MaxPlayers = ""
 g_SteamID    = ""
 
+_G.co_loadinfo = {name="",map="",gm=""}
+
 local PANEL = {}
 
 function PANEL:Init()
@@ -99,4 +101,8 @@ function GameDetails( servername, serverurl, mapname, maxplayers, steamid, gm )
 	MsgN( "mapname ",mapname )
 	MsgN( "maxplayers ",maxplayers )
 	MsgN( "steamid ",steamid )
+
+	_G.co_loadinfo.name = servername
+	_G.co_loadinfo.map = mapname
+	_G.co_loadinfo.gm = gm
 end

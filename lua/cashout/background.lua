@@ -146,8 +146,15 @@ function PANEL:ScreenshotScan( folder )
 	return bReturn
 end
 
-function PANEL:Paint()
-	DrawBackground()
+local TOGGLED = false
+function PANEL:Paint(w,h)
+	if TOGGLED then
+		if not IsInGame() then
+			draw.RoundedBox(0, 0, 0, w, h, Color(0,0,0))
+		end
+	else
+		DrawBackground()
+	end
 
 	if ( self.IsInGame != IsInGame() ) then
 
@@ -180,4 +187,5 @@ end
 
 vgui.Register("cashout_background", PANEL, "EditablePanel")
 
-concommand.Add("cashout_change_background", ChangeBackground)
+concommand.Add("co_change_background", ChangeBackground)
+concommand.Add("co_toggle_background", function() TOGGLED = not TOGGLED end)

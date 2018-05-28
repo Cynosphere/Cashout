@@ -124,9 +124,9 @@ function PANEL:SetupSettings()
             RunConsoleCommand("hostname",hostname:GetValue())
             RunConsoleCommand("maxplayers",1)
             RunConsoleCommand("map",self.SelectedMap)
-        end)
 
-        self:Remove()
+            self:Remove()
+        end)
     end
     self.sp.Think = function(p) p:SetDisabled(self.SelectedMap == "" and true or false) end
 
@@ -144,9 +144,9 @@ function PANEL:SetupSettings()
             RunConsoleCommand("hostname",hostname:GetValue())
             RunConsoleCommand("maxplayers",maxplayers:GetValue())
             RunConsoleCommand("map",self.SelectedMap)
-        end)
 
-        self:Remove()
+            self:Remove()
+        end)
     end
     self.mp.Think = function(p) p:SetDisabled(self.SelectedMap == "" and true or false) end
 end

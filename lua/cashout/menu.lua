@@ -1,4 +1,4 @@
-_G.CASHOUT_VERSION = "1.0.1-dev"
+_G.CASHOUT_VERSION = "1.0.2-dev"
 
 -- Menu Functionality and Requirements
 --include("menu/mount/mount.lua") -- Workshop
@@ -33,4 +33,8 @@ end
 function GetConVarString( name )
 	local c = GetConVar( name )
 	return ( c and c:GetString() ) or ""
+end
+
+function Derma_DrawBackgroundBlur()
+
 end

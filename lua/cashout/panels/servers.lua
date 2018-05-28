@@ -3,12 +3,93 @@ local SERVERSLOADED = 0
 
 local ServerList = {}
 
+local function CreateInfoBox(pnl,data)
+    local InfoBox = vgui.Create("DFrame")
+    InfoBox:SetSize(384,448)
+    InfoBox:Center()
+    InfoBox:MakePopup()
+    InfoBox:SetTitle("Server Info - "..data.name)
+    InfoBox:DockPadding(8,28,8,8)
+
+    local Name = vgui.Create("DLabel",InfoBox)
+    Name:SetText("Name: "..data.name)
+    Name:Dock(TOP)
+
+    local IP = vgui.Create("DLabel",InfoBox)
+    IP:SetText("IP: "..data.ip)
+    IP:Dock(TOP)
+
+    local Gamemode = vgui.Create("DLabel",InfoBox)
+    Gamemode:SetText("Gamemode: "..data.desc.." ("..data.gamemode..")")
+    Gamemode:Dock(TOP)
+
+    local Map = vgui.Create("DLabel",InfoBox)
+    Map:SetText("Map: "..data.map)
+    Map:Dock(TOP)
+
+    local Players = vgui.Create("DLabel",InfoBox)
+    Players:SetText("Players: "..data.players.."/"..data.maxplayers)
+    Players:Dock(TOP)
+
+    local Ping = vgui.Create("DLabel",InfoBox)
+    Ping:SetText("Ping: "..data.ping)
+    Ping:Dock(TOP)
+
+    local PList = vgui.Create("DListView",InfoBox)
+    PList:Dock(FILL)
+    PList:AddColumn("Name")
+    PList:AddColumn("Score")
+    PList:AddColumn("Time")
+
+    serverlist.PlayerList(data.ip,function(plys)
+        for _,d in next,plys do
+            local time = string.FormattedTime(d.time)
+            local name = d.name
+            local score = d.score
+            local tstr = (time.h and time.h.."h ")..(time.m and time.m.."m ")..(time.s.."s")
+            PList:AddLine(name,score,tstr)
+        end
+    end)
+
+    local Buttons = vgui.Create("EditablePanel", InfoBox)
+    Buttons:Dock(BOTTOM)
+    Buttons:SetTall(32)
+    Buttons:DockPadding(4, 4, 4, 4)
+
+    Buttons.btnClose = vgui.Create("DButton", Buttons)
+    Buttons.btnClose:SetText("Close")
+    Buttons.btnClose:Dock(RIGHT)
+    Buttons.btnClose:SetWide(96)
+    Buttons.btnClose:DockPadding(4, 4, 4, 4)
+    Buttons.btnClose:DockMargin(8, 0, 0, 0)
+    Buttons.btnClose.DoClick = function()
+        InfoBox:Close()
+    end
+
+    Buttons.btnJoin = vgui.Create("DButton", Buttons)
+    Buttons.btnJoin:SetText("Connect")
+    Buttons.btnJoin:Dock(RIGHT)
+    Buttons.btnJoin:SetWide(96)
+    Buttons.btnJoin:DockPadding(4, 4, 4, 4)
+    Buttons.btnJoin.DoClick = function()
+        if data.pass then
+            Derma_StringRequest("Password", data.name.." requires a password.", GetConVar("password"):GetString(),
+            function(text)
+                RunConsoleCommand("password",text)
+                JoinServer(data.ip)
+                InfoBox:Close()
+                if IsValid(pnl) then pnl:Close() end
+            end)
+        else
+            JoinServer(data.ip)
+            InfoBox:Close()
+            if IsValid(pnl) then pnl:Close() end
+        end
+    end
+end
+
 function ServerList:Init()
     self.ServerBrowser = {}
-
-    --[[self.Categories = {}
-    self.List = vgui.Create("DCategoryList", self)
-    self.List:Dock(FILL)--]]
 
     self.QueryType = ""
 
@@ -44,8 +125,23 @@ function ServerList:Init()
         self.SelectedServer = line
     end
     self.ServerList.DoDoubleClick = function(s,i,line)
-        JoinServer(line.data.ip)
-        if IsValid(self.ServerBrowser) then self.ServerBrowser:Close() end
+        if line.data.pass then
+            Derma_StringRequest("Password", line.data.name.." requires a password.", GetConVar("password"):GetString(),
+            function(text)
+                RunConsoleCommand("password",text)
+                JoinServer(line.data.ip)
+              if IsValid(self.ServerBrowser) then self.ServerBrowser:Close() end
+            end)
+        else
+            JoinServer(line.data.ip)
+            if IsValid(self.ServerBrowser) then self.ServerBrowser:Close() end
+        end
+    end
+    self.ServerList.OnRowRightClick = function(s,i,line)
+        local m = DermaMenu()
+        m:AddOption("Join Server",function() s.DoDoubleClick(s,i,line) end):SetIcon("icon16/server_"..(line.data.pass and "key" or "go")..".png")
+        m:AddOption("Server Info",function() CreateInfoBox(self.ServerBrowser,line.data) end):SetIcon("icon16/server_chart.png")
+        m:Open()
     end
 
     self.Controls = vgui.Create("DPanel", self)
@@ -61,6 +157,49 @@ function ServerList:Init()
     self.Controls.HideEmpty:SetDark(true)
     self.Controls.HideEmpty:SizeToContents()
     self.Controls.HideEmpty:DockMargin(0, 0, 16, 0)
+    self.Controls.HideEmpty.PerformLayout = function(s)
+        local x = s.m_iIndent || 0
+
+        s.Button:SetSize( 15, 15 )
+        s.Button:SetPos( x, math.floor( ( s:GetTall() - s.Button:GetTall() ) / 2 ) )
+
+        s.Label:SizeToContents()
+        s.Label:SetPos( x + s.Button:GetWide() + 9, math.floor( ( s:GetTall() - s.Label:GetTall() ) / 2 ) )
+    end
+
+    self.Controls.HideFull = vgui.Create("DCheckBoxLabel", self.Controls)
+    self.Controls.HideFull:Dock(LEFT)
+    self.Controls.HideFull:SetChecked(false)
+    self.Controls.HideFull:SetText("Hide Full?")
+    self.Controls.HideFull:SetDark(true)
+    self.Controls.HideFull:SizeToContents()
+    self.Controls.HideFull:DockMargin(0, 0, 16, 0)
+    self.Controls.HideFull.PerformLayout = function(s)
+        local x = s.m_iIndent || 0
+
+        s.Button:SetSize( 15, 15 )
+        s.Button:SetPos( x, math.floor( ( s:GetTall() - s.Button:GetTall() ) / 2 ) )
+
+        s.Label:SizeToContents()
+        s.Label:SetPos( x + s.Button:GetWide() + 9, math.floor( ( s:GetTall() - s.Label:GetTall() ) / 2 ) )
+    end
+
+    self.Controls.HidePW = vgui.Create("DCheckBoxLabel", self.Controls)
+    self.Controls.HidePW:Dock(LEFT)
+    self.Controls.HidePW:SetChecked(false)
+    self.Controls.HidePW:SetText("Hide Passworded?")
+    self.Controls.HidePW:SetDark(true)
+    self.Controls.HidePW:SizeToContents()
+    self.Controls.HidePW:DockMargin(0, 0, 16, 0)
+    self.Controls.HidePW.PerformLayout = function(s)
+        local x = s.m_iIndent || 0
+
+        s.Button:SetSize( 15, 15 )
+        s.Button:SetPos( x, math.floor( ( s:GetTall() - s.Button:GetTall() ) / 2 ) )
+
+        s.Label:SizeToContents()
+        s.Label:SetPos( x + s.Button:GetWide() + 9, math.floor( ( s:GetTall() - s.Label:GetTall() ) / 2 ) )
+    end
 
     self.Controls.Limit = vgui.Create("DNumSlider", self.Controls)
     self.Controls.Limit:SetText("Server Display Limit")
@@ -159,6 +298,8 @@ function ServerList:Query(type)
         if SERVERSLOADED == self.Controls.Limit:GetValue() then STOPLOADING = true end
         if STOPLOADING then return false end
         if players == 0 and self.Controls.HideEmpty:GetChecked() then return end
+        if players == maxplayers and self.Controls.HideFull:GetChecked() then return end
+        if pass and self.Controls.HidePW:GetChecked() then return end
         local data = {
             ping=ping,
             name=name,

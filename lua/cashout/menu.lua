@@ -1,4 +1,4 @@
-_G.CASHOUT_VERSION = "1.0.2-dev"
+_G.CASHOUT_VERSION = "1.0.3-dev"
 
 -- Menu Functionality and Requirements
 --include("menu/mount/mount.lua") -- Workshop
@@ -18,22 +18,11 @@ include("cashout/workshop.lua") -- Custom workshop status
 
 include("cashout/plugins.lua")
 
-print("Loaded Cashout v"..CASHOUT_VERSION)
-concommand.Add("menu_reloadx", function()
-    include'includes/menu.lua'
-    hook.Call"MenuStart"
+print("Loaded Cashout v" .. CASHOUT_VERSION)
+concommand.Add("menu_reload", function()
+    include("includes/menu.lua")
+    hook.Run("MenuStart")
 end)
-
--- hahaha this is STILL NOT FIXED ON MENU STATE
-function GetConVarNumber( name )
-	local c = GetConVar( name )
-	return ( c and c:GetFloat() ) or 0
-end
-
-function GetConVarString( name )
-	local c = GetConVar( name )
-	return ( c and c:GetString() ) or ""
-end
 
 function Derma_DrawBackgroundBlur()
 

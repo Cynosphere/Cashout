@@ -1,12 +1,12 @@
 local PANEL = {}
 
 function PANEL:Init()
-    self:SetSize(ScrW()-512,ScrH()-256)
+    self:SetSize(ScrW()-492,ScrH()-256)
     self:SetTitle("New Game")
     self:SetIcon("icon16/world_add.png")
 
     self:Center()
-	self:MakePopup()
+    self:MakePopup()
 
     self.SelectedMap = ""
 
@@ -72,15 +72,86 @@ function PANEL:SetupSettings()
     hostname:DockMargin(16, 0, 0, 0)
     self.Settings:Add(pnlHost)
 
+    local pnlGM = vgui.Create("EditablePanel",self.Settings)
+    pnlGM:Dock(TOP)
+    pnlGM:DockMargin(4,4,4,4)
+    local lblGM = vgui.Create("DLabel",pnlGM)
+    lblGM:Dock(LEFT)
+    lblGM:SetText("Gamemode:")
+    lblGM:SizeToContents()
+    lblGM:SetDark(true)
+    local dropGM = vgui.Create("DComboBox",pnlGM)
+    dropGM:Dock(FILL)
+    dropGM:DockMargin(16, 0, 0, 0)
+    for _, data in pairs(engine.GetGamemodes()) do
+        if not data.menusystem then continue end
+        local icon = ("gamemodes/%s/icon24.png"):format(data.name)
+        local hasIcon = file.Exists(icon, "GAME")
+        dropGM:AddChoice(data.title, data.name, engine.ActiveGamemode() == data.name, hasIcon and icon or "icon16/brick.png")
+    end
+    dropGM.OnSelect = function(s, index, text, val)
+        RunConsoleCommand("gamemode", val)
+    end
+    -- stupid hack
+    dropGM.OpenMenu = function(s, pControlOpener)
+        if pControlOpener and pControlOpener == s.TextEntry then
+            return
+        end
+
+        -- Don't do anything if there aren't any options..
+        if ( #s.Choices == 0 ) then return end
+
+        -- If the menu still exists and hasn't been deleted
+        -- then just close it and don't open a new one.
+        if ( IsValid( s.Menu ) ) then
+            s.Menu:Remove()
+            s.Menu = nil
+        end
+
+        s.Menu = DermaMenu( false, s )
+
+        if ( s:GetSortItems() ) then
+            local sorted = {}
+            for k, v in pairs( s.Choices ) do
+                local val = tostring( v ) --tonumber( v ) || v -- This would make nicer number sorting, but SortedPairsByMemberValue doesn't seem to like number-string mixing
+                if ( string.len( val ) > 1 and not tonumber( val ) and val:StartWith( "#" ) ) then val = language.GetPhrase( val:sub( 2 ) ) end
+                table.insert( sorted, { id = k, data = v, label = val } )
+            end
+            for k, v in SortedPairsByMemberValue( sorted, "label" ) do
+                local option = s.Menu:AddOption( v.data, function() s:ChooseOption( v.data, v.id ) end )
+                if ( s.ChoiceIcons[ v.id ] ) then
+                    option:SetIcon( s.ChoiceIcons[ v.id ] )
+                    option.m_Image:SetSize(16, 16) -- stupid hack
+                end
+            end
+        else
+            for k, v in pairs( s.Choices ) do
+                local option = s.Menu:AddOption( v, function() s:ChooseOption( v, k ) end )
+                if ( s.ChoiceIcons[ k ] ) then
+                    option:SetIcon( s.ChoiceIcons[ k ] )
+                    option.m_Image:SetSize(16, 16) -- stupid hack
+                end
+            end
+        end
+
+        local x, y = s:LocalToScreen( 0, s:GetTall() )
+
+        s.Menu:SetMinimumWidth( s:GetWide() )
+        s.Menu:Open( x, y, false, s )
+    end
+
     local maxplayers = vgui.Create("DNumSlider",self)
     maxplayers:SetText("Max Players:")
     maxplayers:SetMin(2)
     maxplayers:SetMax(128)
     maxplayers:SetDecimals(0)
-    maxplayers:SetValue(2)
+    maxplayers:SetValue(tonumber(cookie.GetNumber("cashout_maxplayers")) or 2)
     maxplayers:Dock(TOP)
     maxplayers:DockMargin(4,4,4,4)
     maxplayers:SetDark(true)
+    function maxplayers:OnValueChanged(value)
+        cookie.Set("cashout_maxplayers",math.Round(value))
+    end
     self.Settings:Add(maxplayers)
 
     local lan = vgui.Create("DCheckBoxLabel",self.Settings)
@@ -123,7 +194,7 @@ function PANEL:SetupSettings()
         timer.Simple(0.1, function()
             RunConsoleCommand("hostname",hostname:GetValue())
             RunConsoleCommand("maxplayers",1)
-            RunConsoleCommand("map",self.SelectedMap)
+            RunConsoleCommand("map",self.SelectedMap:Trim())
 
             self:Remove()
         end)
@@ -142,8 +213,8 @@ function PANEL:SetupSettings()
         RunGameUICommand("disconnect")
         timer.Simple(0.1, function()
             RunConsoleCommand("hostname",hostname:GetValue())
-            RunConsoleCommand("maxplayers",maxplayers:GetValue())
-            RunConsoleCommand("map",self.SelectedMap)
+            RunConsoleCommand("maxplayers",math.Round(maxplayers:GetValue()))
+            RunConsoleCommand("map",self.SelectedMap:Trim())
 
             self:Remove()
         end)
@@ -200,10 +271,10 @@ function PANEL:CreateMapIcon(name)
     local icon = vgui.Create("DImage",map)
     icon:Dock(FILL)
     if Material("maps/thumb/"..name..".png"):IsError() then
-		icon:SetImage("gui/noicon.png")
-	else
-		icon:SetImage("maps/thumb/"..name..".png")
-	end
+        icon:SetImage("gui/noicon.png")
+    else
+        icon:SetImage("maps/thumb/"..name..".png")
+    end
 
     return map
 end

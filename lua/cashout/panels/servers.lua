@@ -51,6 +51,8 @@ local function CreateInfoBox(pnl,data)
         end
     end)
 
+    PList:SortByColumn(2)
+
     local Buttons = vgui.Create("EditablePanel", InfoBox)
     Buttons:Dock(BOTTOM)
     Buttons:SetTall(32)
@@ -92,6 +94,7 @@ function ServerList:Init()
     self.ServerBrowser = {}
 
     self.QueryType = ""
+    self.CookiePrefix = "cashout_srv"
 
     self.LoadButton = vgui.Create("DButton", self)
     self.LoadButton:Dock(TOP)
@@ -100,24 +103,62 @@ function ServerList:Init()
     self.LoadButton:SetText("Load Servers (may lag)")
     self.LoadButton.DoClick = function(s)
         STOPLOADING = false
-        self:Query(self.QueryType)
+        self:Query()
     end
 
     self.ServerList = vgui.Create("DListView", self)
     self.ServerList:Dock(FILL)
+
     local pass = self.ServerList:AddColumn(" ")
     pass:SetFixedWidth(16)
+    pass.oDC = pass.DoClick
+    pass.DoClick = function(s)
+        self.ServerList.ToSortBy = s:GetColumnID()
+        return s.oDC
+    end
+
     self.ServerList:AddColumn("Name")
-    local map = self.ServerList:AddColumn("Map")
-    map:SetFixedWidth(192)
     local gm = self.ServerList:AddColumn("Gamemode")
     gm:SetFixedWidth(128)
+    gm.oDC = gm.DoClick
+    gm.DoClick = function(s)
+        self.ServerList.ToSortBy = s:GetColumnID()
+        return s:oDC()
+    end
+
     local plys = self.ServerList:AddColumn("Players")
-    plys:SetFixedWidth(40)
+    plys:SetFixedWidth(48)
+    plys.oDC = plys.DoClick
+    plys.DoClick = function(s)
+        self.ServerList.ToSortBy = s:GetColumnID()
+        return s:oDC()
+    end
+
+    local map = self.ServerList:AddColumn("Map")
+    map:SetFixedWidth(192)
+    map.oDC = map.DoClick
+    map.DoClick = function(s)
+        self.ServerList.ToSortBy = s:GetColumnID()
+        return s:oDC()
+    end
+
     local ping = self.ServerList:AddColumn("Ping")
     ping:SetFixedWidth(32)
+    ping.oDC = ping.DoClick
+    ping.DoClick = function(s)
+        self.ServerList.ToSortBy = s:GetColumnID()
+        return s:oDC()
+    end
+
     local ip = self.ServerList:AddColumn("IP")
     ip:SetFixedWidth(128)
+    ip.oDC = ip.DoClick
+    ip.DoClick = function(s)
+        self.ServerList.ToSortBy = s:GetColumnID()
+        return s:oDC()
+    end
+
+    self.ServerList.ToSortBy = ping:GetColumnID()
 
     self.ServerList.OnRowSelected = function(s,i,line)
         if IsValid(self.SelectedServer) and line == self.SelectedServer then return end
@@ -152,13 +193,16 @@ function ServerList:Init()
 
     self.Controls.HideEmpty = vgui.Create("DCheckBoxLabel", self.Controls)
     self.Controls.HideEmpty:Dock(LEFT)
-    self.Controls.HideEmpty:SetChecked(false)
+    self.Controls.HideEmpty:SetChecked(cookie.GetNumber(self.CookiePrefix.."_hideempty",0))
     self.Controls.HideEmpty:SetText("Hide Empty?")
     self.Controls.HideEmpty:SetDark(true)
     self.Controls.HideEmpty:SizeToContents()
     self.Controls.HideEmpty:DockMargin(0, 0, 16, 0)
+    self.Controls.HideEmpty.OnChange = function(s,val)
+        cookie.Set(self.CookiePrefix.."_hideempty",val == true and 1 or 0)
+    end
     self.Controls.HideEmpty.PerformLayout = function(s)
-        local x = s.m_iIndent || 0
+        local x = s.m_iIndent or 0
 
         s.Button:SetSize( 15, 15 )
         s.Button:SetPos( x, math.floor( ( s:GetTall() - s.Button:GetTall() ) / 2 ) )
@@ -169,13 +213,16 @@ function ServerList:Init()
 
     self.Controls.HideFull = vgui.Create("DCheckBoxLabel", self.Controls)
     self.Controls.HideFull:Dock(LEFT)
-    self.Controls.HideFull:SetChecked(false)
+    self.Controls.HideFull:SetChecked(cookie.GetNumber(self.CookiePrefix.."_hidefull",0))
     self.Controls.HideFull:SetText("Hide Full?")
     self.Controls.HideFull:SetDark(true)
     self.Controls.HideFull:SizeToContents()
     self.Controls.HideFull:DockMargin(0, 0, 16, 0)
+    self.Controls.HideFull.OnChange = function(s,val)
+        cookie.Set(self.CookiePrefix.."_hidefull",val == true and 1 or 0)
+    end
     self.Controls.HideFull.PerformLayout = function(s)
-        local x = s.m_iIndent || 0
+        local x = s.m_iIndent or 0
 
         s.Button:SetSize( 15, 15 )
         s.Button:SetPos( x, math.floor( ( s:GetTall() - s.Button:GetTall() ) / 2 ) )
@@ -186,13 +233,16 @@ function ServerList:Init()
 
     self.Controls.HidePW = vgui.Create("DCheckBoxLabel", self.Controls)
     self.Controls.HidePW:Dock(LEFT)
-    self.Controls.HidePW:SetChecked(false)
+    self.Controls.HidePW:SetChecked(cookie.GetNumber(self.CookiePrefix.."_hidepw",0))
     self.Controls.HidePW:SetText("Hide Passworded?")
     self.Controls.HidePW:SetDark(true)
     self.Controls.HidePW:SizeToContents()
     self.Controls.HidePW:DockMargin(0, 0, 16, 0)
+    self.Controls.HidePW.OnChange = function(s,val)
+        cookie.Set(self.CookiePrefix.."_hidepw",val == true and 1 or 0)
+    end
     self.Controls.HidePW.PerformLayout = function(s)
-        local x = s.m_iIndent || 0
+        local x = s.m_iIndent or 0
 
         s.Button:SetSize( 15, 15 )
         s.Button:SetPos( x, math.floor( ( s:GetTall() - s.Button:GetTall() ) / 2 ) )
@@ -207,20 +257,24 @@ function ServerList:Init()
     self.Controls.Limit:SetMin(200)
     self.Controls.Limit:SetMax(5000)
     self.Controls.Limit:SetDecimals(0)
-    self.Controls.Limit:SetValue(5000)
+    self.Controls.Limit:SetValue(cookie.GetNumber(self.CookiePrefix.."_limit",5000))
     self.Controls.Limit:SetDark(true)
     self.Controls.Limit:SetWide(256)
+    self.Controls.Limit.OnValueChanged = function(s,val)
+        cookie.Set(self.CookiePrefix.."_limit",math.Clamp(val,200,5000))
+    end
 
     self.Controls.Reload = vgui.Create("DButton", self.Controls)
     self.Controls.Reload:Dock(RIGHT)
     self.Controls.Reload:SetWide(96)
     self.Controls.Reload:SetText("Refresh")
     self.Controls.Reload.DoClick = function(s)
+        local pnl = self
         STOPLOADING = true
-        if IsValid(self.SelectedServer) then self.SelectedServer:SetSelected(false) self.SelectedServer = {} end
-        self.ServerList:Clear()
+        if IsValid(pnl.SelectedServer) then pnl.SelectedServer:SetSelected(false) pnl.SelectedServer = {} end
+        pnl.ServerList:Clear()
         STOPLOADING = false
-        self:Query(self.QueryType)
+        pnl:Query(pnl.QueryType)
     end
 
     self.Controls.StopLoad = vgui.Create("DButton", self.Controls)
@@ -239,67 +293,48 @@ function ServerList:Init()
     self.SelectedServer = {}
 end
 
-function ServerList:AddCategory(id,name)
-    self.Categories[id] = self.List:Add(name.." ("..id..")")
-    self.Categories[id].InitialName = name
-    self.Categories[id]:SetExpanded(false)
-    self.Categories[id].ServerList = vgui.Create("DListView", self.Categories[id])
-    self.Categories[id].ServerList:Dock(FILL)
-    self.Categories[id].ServerList:DisableScrollbar()
-    local pass = self.Categories[id].ServerList:AddColumn(" ")
-    pass:SetFixedWidth(16)
-    self.Categories[id].ServerList:AddColumn("Name")
-    local map = self.Categories[id].ServerList:AddColumn("Map")
-    map:SetFixedWidth(192)
-    local gm = self.Categories[id].ServerList:AddColumn("Gamemode")
-    gm:SetFixedWidth(128)
-    local plys = self.Categories[id].ServerList:AddColumn("Players")
-    plys:SetFixedWidth(40)
-    local ping = self.Categories[id].ServerList:AddColumn("Ping")
-    ping:SetFixedWidth(32)
-    local ip = self.Categories[id].ServerList:AddColumn("IP")
-    ip:SetFixedWidth(128)
+function ServerList:SetQueryType(qtype)
+    self.QueryType = qtype
+    self.CookiePrefix = "cashout_srv_"..qtype
 
-    self.Categories[id].OnToggle = function(s) s.ServerList:SizeToContents() end
-    self.Categories[id].ServerList.OnRowSelected = function(s,i,line)
-        if ispanel(self.SelectedServer) then self.SelectedServer:SetSelected(false) end
-        self.SelectedServer = line
+    self.Controls.HideEmpty:SetChecked(cookie.GetNumber(self.CookiePrefix.."_hideempty",0))
+    self.Controls.HideEmpty.OnChange = function(s,val)
+        cookie.Set(self.CookiePrefix.."_hideempty",val == true and 1 or 0)
     end
-    self.Categories[id].ServerList.DoDoubleClick = function(s,i,line)
-        JoinServer(line.data.ip)
-        if IsValid(self.ServerBrowser) then self.ServerBrowser:Close() end
+
+    self.Controls.HideFull:SetChecked(cookie.GetNumber(self.CookiePrefix.."_hidefull",0))
+    self.Controls.HideFull.OnChange = function(s,val)
+        cookie.Set(self.CookiePrefix.."_hidefull",val == true and 1 or 0)
     end
-end
-
-function ServerList:AddToCategory(data)
-    if not IsValid(self) then return end
-    if data.players == 0 and self.Controls.HideEmpty:GetChecked() then return end
-    if not self.Categories[data.desc:lower()] then self:AddCategory(data.desc:lower(),data.gamemode) end
-    local slist = self.Categories[data.desc:lower()].ServerList
-    local line = slist:AddLine(data.pass and "P" or "",data.name,data.map,data.desc,data.players.."/"..data.maxplayers,data.ping,data.ip)
-    line.data = data
-    self.Categories[data.desc:lower()]:SetLabel(data.desc.." ("..data.gamemode..") - "..table.Count(slist:GetLines()).." servers")
-
-    slist:Dock(TOP)
-    slist:SizeToContents()
-    slist:FixColumnsLayout()
+    self.Controls.HidePW:SetChecked(cookie.GetNumber(self.CookiePrefix.."_hidepw",0))
+    self.Controls.HidePW.OnChange = function(s,val)
+        cookie.Set(self.CookiePrefix.."_hidepw",val == true and 1 or 0)
+    end
+    self.Controls.Limit:SetValue(cookie.GetNumber(self.CookiePrefix.."_limit",5000))
+    self.Controls.Limit.OnValueChanged = function(s,val)
+        cookie.Set(self.CookiePrefix.."_limit",math.Clamp(val,200,5000))
+    end
 end
 
 function ServerList:AddServer(data)
     if not IsValid(self) then return end
-    local line = self.ServerList:AddLine(data.pass and "P" or "",data.name,data.map,data.desc,data.players.."/"..data.maxplayers,data.ping,data.ip)
+    local line = self.ServerList:AddLine(data.pass and "P" or "",data.name,data.desc,data.players.."/"..data.maxplayers,data.map,data.ping,data.ip)
     line.data = data
+    line:SetSortValue(4,line.data.players)
+    self.ServerList:SortByColumn(self.ServerList.ToSortBy)
 end
 
-function ServerList:Query(type)
-    self.LoadButton:Remove()
-    serverlist.Query({Type=type,Callback=function(ping,name,desc,map,players,maxplayers,bots,pass,lastplayed,ip,gamemode,wsid)
+function ServerList:Query()
+    if IsValid(self.LoadButton) then
+        self.LoadButton:Remove()
+    end
+    serverlist.Query({Type=self.QueryType,Callback=function(ping,name,desc,map,players,maxplayers,bots,pass,lastplayed,ip,gamemode,wsid)
         if not IsValid(self) then return false end
-        if SERVERSLOADED == self.Controls.Limit:GetValue() then STOPLOADING = true end
+        if SERVERSLOADED == cookie.GetNumber(self.CookiePrefix.."_limit",5000) then STOPLOADING = true end
         if STOPLOADING then return false end
-        if players == 0 and self.Controls.HideEmpty:GetChecked() then return end
-        if players == maxplayers and self.Controls.HideFull:GetChecked() then return end
-        if pass and self.Controls.HidePW:GetChecked() then return end
+        if players == 0 and tobool(cookie.GetNumber(self.CookiePrefix.."_hideempty",0)) then return end
+        if players == maxplayers and tobool(cookie.GetNumber(self.CookiePrefix.."_hidefull",0)) then return end
+        if pass and tobool(cookie.GetNumber(self.CookiePrefix.."_hidepw",0)) then return end
         local data = {
             ping=ping,
             name=name,
@@ -341,28 +376,28 @@ function PANEL:Init()
     self.Tabs:Dock(FILL)
 
     self.Global = vgui.CreateFromTable(ServerList, self)
-    self.Global.QueryType = "internet"
+    self.Global:SetQueryType("internet")
     self.Global.ServerBrowser = self
     self.Tabs:AddSheet("Global",self.Global,"icon16/world.png")
 
     self.Favorites = vgui.CreateFromTable(ServerList, self)
-    self.Favorites.QueryType = "favorite"
+    self.Favorites:SetQueryType("favorite")
     self.Favorites.ServerBrowser = self
     self.Tabs:AddSheet("Favorites",self.Favorites,"icon16/star.png")
 
     self.History = vgui.CreateFromTable(ServerList, self)
-    self.History.QueryType = "history"
+    self.History:SetQueryType("history")
     self.History.ServerBrowser = self
     self.Tabs:AddSheet("History",self.History,"icon16/time.png")
 
     self.Local = vgui.CreateFromTable(ServerList, self)
-    self.Local.QueryType = "lan"
+    self.Local:SetQueryType("lan")
     self.Local.ServerBrowser = self
     self.Tabs:AddSheet("Local",self.Local,"icon16/computer_link.png")
 
     timer.Simple(0.2,function()
-        self.Favorites:Query("favorite")
-        self.Local:Query("lan")
+        self.Favorites:Query()
+        self.Local:Query()
     end)
 end
 

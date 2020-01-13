@@ -4,10 +4,17 @@ include("panels/newgame.lua")
 include("panels/addons.lua")
 include("panels/servers.lua")
 
+-- these dont get assigned globally menu state??????
+TEXT_ALIGN_LEFT		= 0
+TEXT_ALIGN_CENTER	= 1
+TEXT_ALIGN_RIGHT	= 2
+TEXT_ALIGN_TOP		= 3
+TEXT_ALIGN_BOTTOM	= 4
+
 surface.CreateFont("Cashout_GModLogo",{
-	font = "Coolvetica",
-	size = 48,
-	weight = 400
+    font = "Coolvetica",
+    size = 48,
+    weight = 400
 })
 
 if IsValid(_G.mainMenu) then mainMenu:Remove() end
@@ -28,8 +35,8 @@ local mmPaint = mainMenu.Paint
 function mainMenu:Paint(w,h)
     mmPaint(self,w,h)
 
-    draw.SimpleText("Cashout v"..CASHOUT_VERSION, "BudgetLabel", ScrW()-2, 72, Color(255,255,255), 2)
-    draw.SimpleText(("Garry's Mod %s%s"):format(VERSIONSTR,(BRANCH ~= "unknown" and " ["..BRANCH.."]" or "")), "BudgetLabel", ScrW()-2, 58, Color(255,255,255), 2)
+    draw.SimpleText("Cashout v" .. CASHOUT_VERSION, "BudgetLabel", ScrW() - 2, 72, Color(255,255,255), 2)
+    draw.SimpleText(("Garry's Mod %s%s"):format(VERSIONSTR, BRANCH ~= "unknown" and (" [%s]"):format(BRANCH) or ""), "BudgetLabel", ScrW() - 2, 58, Color(255,255,255), 2)
 end
 
 local nav = vgui.Create("EditablePanel", mainMenu)
@@ -44,12 +51,13 @@ local logo = vgui.Create("EditablePanel", nav)
 logo:Dock(LEFT)
 logo:DockMargin(50,0,50,0)
 surface.SetFont("Cashout_GModLogo")
-logo:SetWide(62+surface.GetTextSize("garry's mod"))
+local gmw, gmh = surface.GetTextSize("garry's mod")
+logo:SetWide(62 + gmw)
 
 function logo:Paint(w,h)
     draw.RoundedBox(4,4,4,48,48,Color(18,149,241))
-    draw.SimpleText("g", "Cashout_GModLogo", 48/2+4, 48/2, Color(255,255,255), 1, 1)
-    draw.SimpleText("garry's mod", "Cashout_GModLogo", 58, h/2-2, Color(255,255,255), TEXT_ALIGN_LEFT, 1)
+    draw.SimpleText("g", "Cashout_GModLogo", 48 / 2 + 4, 48 / 2, Color(255,255,255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+    draw.SimpleText("garry's mod", "Cashout_GModLogo", 58, h / 2 - 2, Color(255,255,255), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 end
 
 local btnPlay = vgui.Create("DButton", nav)
@@ -59,14 +67,14 @@ btnPlay:SetText("")
 btnPlay.alpha = 128
 
 function btnPlay:Paint(w,h)
-    self.alpha = Lerp(0.05,self.alpha,self.Hovered and 128 or 0)
+    self.alpha = Lerp(FrameTime() * 1.5, self.alpha, self.Hovered and 128 or 0)
     draw.RoundedBox(0,0,0,w,h,Color(0,128,255,self.alpha))
-    draw.SimpleText("Play", "DermaLarge", w/2, h/2, Color(255,255,255,self.alpha+127), 1, 1)
+    draw.SimpleText("Play", "DermaLarge", w / 2, h / 2, Color(255, 255, 255, self.alpha + 127), 1, 1)
 
-    surface.SetDrawColor(Color(255,255,255,self.alpha+127))
+    surface.SetDrawColor(Color(255, 255, 255, self.alpha + 127))
     surface.DrawLine(0, 0, 0, h)
     surface.DrawLine(1, 0, 1, h)
-    surface.DrawLine(w-1, 0, w-1, h)
+    surface.DrawLine(w - 1, 0, w - 1, h)
 end
 
 function btnPlay:DoClick()
@@ -164,22 +172,74 @@ end
 
 function btnDisconenct:DoClick() RunGameUICommand("disconnect") end
 
-local loadingbar = vgui.Create("EditablePanel", mainMenu)
-loadingbar:Dock(BOTTOM)
-loadingbar:SetTall(32)
+local loadinglog = vgui.Create("EditablePanel", mainMenu)
+loadinglog:SetPos(0,56)
+loadinglog:SetTall(ScrH()-56)
+loadinglog:SetWide(ScrW())
 
-local x = 0
-function loadingbar:Paint(w,h)
-    if not GetLoadStatus() then return end
-    draw.RoundedBox(0, 0, 0, w, h, Color(64,64,64))
-    draw.RoundedBox(4, x, 0, 128, h, Color(0,192,0))
+local function needsDL(name)
+    return file.Exists( name, "GAME" ) and 0 or 1
+end
 
-    x=x+1
-    if x > ScrW() then x = -128 end
+surface.SetFont("BudgetLabel")
+local _,th = surface.GetTextSize("W")
+local lines = {}
+local gotDLs = false
+local y = 56
+local numlines = 0
+while true do
+    y = y+th+2
+    numlines = numlines+1
+    if y >= ScrH() then
+    print("lines we can have: ",numlines)
+    break
+    end
+end
+hook.Add("LoadingStatus", "loadinglog", function(status)
+    if not status then return end
+    if not table.HasValue(lines,status:Trim()) and status:Trim() ~= "" then
+        table.insert(lines,status:Trim())
+        if #lines > numlines then
+            table.remove(lines,1)
+        end
+    end
+end)
+function loadinglog:Paint(w,h)
+    if not GetLoadStatus() then
+        if table.Count(lines) > 0 then lines = {} gotDLs = false end
+        return
+    end
+    local dls = GetDownloadables()
+    if dls and not gotDLs then
+        local dling = 0
+        local count = 0
+        for k, v in pairs( dls ) do
 
-    draw.SimpleText(GetLoadStatus() or "", "ChatFont", w/2, h/2, Color(255,255,255), 1, 1)
+            v = string.gsub( v, ".bz2", "" )
+            v = string.gsub( v, ".ztmp", "" )
+            v = string.gsub( v, "\\", "/" )
 
-    DisableClipping(true)
-        draw.SimpleText("Files Remaining: "..(GetDownloadables() and #GetDownloadables() or 0),"ChatFont",2,-18,Color(255,255,255))
-    DisableClipping(false)
+            dling = dling + needsDL(v)
+            count = count + 1
+
+        end
+        if dling == 0 then return end
+        local str = "Files needed: "..dling
+        if not table.HasValue(lines,str) then
+            table.insert(lines,str)
+        end
+        str = "Total Files: "..count
+        if not table.HasValue(lines,str) then
+            table.insert(lines,str)
+        end
+        gotDLs = true --1fps loading
+    end
+
+    surface.SetAlphaMultiplier(0.8)
+    if table.Count(lines) > 0 then
+        for k,v in pairs(lines) do
+            draw.SimpleText(v, "BudgetLabel", 2, 2+((k-1)*th), HSVToColor(((k*10)+CurTime()*50)%360, 0.375, 1))
+        end
+    end
+    surface.SetAlphaMultiplier(1)
 end

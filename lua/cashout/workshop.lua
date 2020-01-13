@@ -1,93 +1,83 @@
-local pnlWorkshop = vgui.RegisterFile( "cashout/panels/workshop.lua" )
+local pnlWorkshop = vgui.RegisterFile("cashout/panels/workshop.lua")
 local vgui_workshop = nil
 
-hook.Add( "WorkshopStart", "WorkshopStart", function()
+hook.Add("WorkshopStart", "WorkshopStart", function()
+    if IsValid(vgui_workshop) then vgui_workshop:Remove() end
 
-	if ( IsValid( vgui_workshop ) ) then vgui_workshop:Remove() end
+    vgui_workshop = GetOverlayPanel():Add( pnlWorkshop )
+end)
 
-	vgui_workshop = GetOverlayPanel():Add( pnlWorkshop )
+hook.Add("WorkshopEnd", "WorkshopEnd", function()
+    if not IsValid(vgui_workshop) then return end
 
-end )
+    vgui_workshop:Remove()
+end)
 
-hook.Add( "WorkshopEnd", "WorkshopEnd", function()
+hook.Add("WorkshopDownloadFile", "WorkshopDownloadFile", function( id, iImageID, title, iSize )
+    if not IsValid(vgui_workshop) then
+        vgui_workshop = GetOverlayPanel():Add( pnlWorkshop )
+    end
 
-	if ( !IsValid( vgui_workshop ) ) then return end
+    vgui_workshop:PrepareDownloading( id, title, iSize )
+    vgui_workshop:StartDownloading( id, iImageID, title, iSize )
+end)
 
-	vgui_workshop:Remove()
+hook.Add("WorkshopDownloadedFile", "WorkshopDownloadedFile", function( id, title, authorid )
 
-end )
+    if not IsValid(vgui_workshop) then return end
 
-hook.Add( "WorkshopDownloadFile", "WorkshopDownloadFile", function( id, iImageID, title, iSize )
+    vgui_workshop:FinishedDownloading(id, title, authorid)
 
-	if ( !IsValid( vgui_workshop ) ) then
-		vgui_workshop = GetOverlayPanel():Add( pnlWorkshop )
-	end
+end)
 
-	vgui_workshop:PrepareDownloading( id, title, iSize )
-	vgui_workshop:StartDownloading( id, iImageID, title, iSize )
+hook.Add("WorkshopDownloadProgress", "WorkshopDownloadProgress", function( id, iImageID, title, downloaded, expected )
 
-end )
+    if not IsValid(vgui_workshop) then
+        vgui_workshop = GetOverlayPanel():Add( pnlWorkshop )
+        vgui_workshop:PrepareDownloading( id, title, expected )
+        vgui_workshop:StartDownloading( id, iImageID, title, expected )
+    end
 
-hook.Add( "WorkshopDownloadedFile", "WorkshopDownloadedFile", function( id, title, authorid )
+    vgui_workshop:UpdateProgress( downloaded, expected )
 
-	if ( !IsValid( vgui_workshop ) ) then return end
+end)
 
-	vgui_workshop:FinishedDownloading( id, title, authorid )
+hook.Add("WorkshopExtractProgress", "WorkshopExtractProgress", function( id, iImageID, title, percent )
 
-end )
+    if not IsValid( vgui_workshop ) then
+        vgui_workshop = GetOverlayPanel():Add( pnlWorkshop )
+        vgui_workshop:PrepareDownloading( id, title, percent )
+        vgui_workshop:StartDownloading( id, iImageID, title, percent )
+    end
 
-hook.Add( "WorkshopDownloadProgress", "WorkshopDownloadProgress", function( id, iImageID, title, downloaded, expected )
+    vgui_workshop:ExtractProgress( title, percent )
 
-	if ( !IsValid( vgui_workshop ) ) then
-		vgui_workshop = GetOverlayPanel():Add( pnlWorkshop )
-		vgui_workshop:PrepareDownloading( id, title, expected )
-		vgui_workshop:StartDownloading( id, iImageID, title, expected )
-	end
+end)
 
-	vgui_workshop:UpdateProgress( downloaded, expected )
+hook.Add("WorkshopDownloadTotals", "WorkshopDownloadTotals", function( iRemain, iTotal )
+    if not IsValid( vgui_workshop ) then
+        vgui_workshop = GetOverlayPanel():Add( pnlWorkshop )
+    end
 
-end )
+    --
+    -- Finished..
+    --
+    if ( iRemain == iTotal ) then
+        return
+    end
 
-hook.Add( "WorkshopExtractProgress", "WorkshopExtractProgress", function( id, iImageID, title, percent )
+    local completed = iTotal - iRemain
 
-	if ( !IsValid( vgui_workshop ) ) then
-		vgui_workshop = GetOverlayPanel():Add( pnlWorkshop )
-		vgui_workshop:PrepareDownloading( id, title, percent )
-		vgui_workshop:StartDownloading( id, iImageID, title, percent )
-	end
+    if IsValid( vgui_workshop ) then
+        vgui_workshop:UpdateTotalProgress( completed, iTotal )
+    end
+end)
 
-	vgui_workshop:ExtractProgress( title, percent )
+hook.Add("WorkshopSubscriptionsProgress", "WorkshopSubscriptionsProgress", function( iCurrent, iMax )
+    if not IsValid(vgui_workshop) then
+        vgui_workshop = GetOverlayPanel():Add(pnlWorkshop)
+    end
 
-end )
-
-hook.Add( "WorkshopDownloadTotals", "WorkshopDownloadTotals", function( iRemain, iTotal )
-
-	if ( !IsValid( vgui_workshop ) ) then
-		vgui_workshop = GetOverlayPanel():Add( pnlWorkshop )
-	end
-
-	--
-	-- Finished..
-	--
-	if ( iRemain == iTotal ) then
-		return
-	end
-
-	local completed = ( iTotal - iRemain )
-
-	if ( IsValid( vgui_workshop ) ) then
-		vgui_workshop:UpdateTotalProgress( completed, iTotal )
-	end
-
-end )
-
-hook.Add( "WorkshopSubscriptionsProgress", "WorkshopSubscriptionsProgress", function( iCurrent, iMax )
-
-	if ( !IsValid( vgui_workshop ) ) then
-		vgui_workshop = GetOverlayPanel():Add( pnlWorkshop )
-	end
-
-	vgui_workshop:SubscriptionsProgress( iCurrent, iMax )
-
-end )
+    vgui_workshop:SubscriptionsProgress(iCurrent, iMax)
+end)
 

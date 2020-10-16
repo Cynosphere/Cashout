@@ -1,6 +1,5 @@
 local STOPLOADING = false
 local SERVERSLOADED = 0
-
 local ServerList = {}
 
 local function CreateInfoBox(pnl, data)
@@ -10,31 +9,24 @@ local function CreateInfoBox(pnl, data)
     InfoBox:MakePopup()
     InfoBox:SetTitle("Server Info - " .. data.name)
     InfoBox:DockPadding(8, 28, 8, 8)
-
     local Name = vgui.Create("DLabel", InfoBox)
     Name:SetText("Name: " .. data.name)
     Name:Dock(TOP)
-
     local IP = vgui.Create("DLabel", InfoBox)
     IP:SetText("IP: " .. data.ip)
     IP:Dock(TOP)
-
     local Gamemode = vgui.Create("DLabel", InfoBox)
     Gamemode:SetText(("Gamemode: %s (%s)"):format(data.desc, data.gamemode))
     Gamemode:Dock(TOP)
-
     local Map = vgui.Create("DLabel", InfoBox)
     Map:SetText("Map: " .. data.map)
     Map:Dock(TOP)
-
     local Players = vgui.Create("DLabel", InfoBox)
     Players:SetText(("Players: %d/%d"):format(data.players, data.maxplayers))
     Players:Dock(TOP)
-
     local Ping = vgui.Create("DLabel", InfoBox)
     Ping:SetText("Ping: " .. data.ping)
     Ping:Dock(TOP)
-
     local PList = vgui.Create("DListView", InfoBox)
     PList:Dock(FILL)
     PList:AddColumn("Name")
@@ -52,12 +44,10 @@ local function CreateInfoBox(pnl, data)
     end)
 
     PList:SortByColumn(2)
-
     local Buttons = vgui.Create("EditablePanel", InfoBox)
     Buttons:Dock(BOTTOM)
     Buttons:SetTall(32)
     Buttons:DockPadding(4, 4, 4, 4)
-
     Buttons.btnClose = vgui.Create("DButton", Buttons)
     Buttons.btnClose:SetText("Close")
     Buttons.btnClose:Dock(RIGHT)
@@ -114,7 +104,6 @@ function ServerList:Init()
 
     self.ServerList = vgui.Create("DListView", self)
     self.ServerList:Dock(FILL)
-
     local pass = self.ServerList:AddColumn(" ")
     pass:SetFixedWidth(16)
     pass.oDC = pass.DoClick

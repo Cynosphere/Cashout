@@ -1,7 +1,7 @@
 local PANEL = {}
 
 function PANEL:Init()
-    self:SetSize(ScrW()-512,ScrH()-256)
+    self:SetSize(ScrW() - 512, ScrH() - 256)
     self:SetTitle("Addons")
     self:SetIcon("icon16/plugin.png")
 
@@ -75,19 +75,62 @@ function PANEL:Init()
 end
 
 function PANEL:RefreshWS()
-    local t=engine.GetAddons()
-    table.sort(t,function(a,b)
-        if a.mounted==b.mounted then
+    local addons = engine.GetAddons()
+    table.sort(addons, function(a,b)
+        if a.mounted == b.mounted then
             if a.title and b.title then
-                return a.title<b.title
+                return a.title < b.title
             end
         else
-            return (a.mounted and 0 or 1)<(b.mounted and 0 or 1)
+            return (a.mounted and 0 or 1) < (b.mounted and 0 or 1)
         end
     end)
-    for _,data in next,t do
+    for _, data in ipairs(addons) do
         self:CreateAddonInfo(data)
     end
+
+    self.addonCount = #addons
+end
+
+local queue = {}
+local processed = {}
+local iconThread
+local function processIconQueue(pnl)
+    if table.Count(processed) == pnl.addonCount then
+        coroutine.yield()
+        pnl.iconsFinished = true
+        table.Empty(queue)
+        table.Empty(processed)
+        return
+    end
+
+    for i, data in ipairs(queue) do
+        if processed[data.wsid] then continue end
+        steamworks.FileInfo(data.wsid, function(res)
+            steamworks.Download(res.previewid, true, function(f)
+                if IsValid(data.panel) then
+                    data.panel:SetMaterial(AddonMaterial(f))
+                end
+                processed[data.wsid] = true
+            end)
+        end)
+
+        coroutine.wait(FrameTime())
+    end
+end
+
+function PANEL:Think()
+    if not iconThread or not coroutine.resume(iconThread) and not self.iconsFinished then
+        iconThread = coroutine.create(processIconQueue)
+        coroutine.resume(iconThread, self)
+    end
+end
+
+function PANEL:QueueWorkshopIcon(pnl, wsid)
+    queue[#queue + 1] = {
+        wsid = wsid,
+        panel = pnl,
+    }
 end
 
 function PANEL:CreateAddonInfo(data)
@@ -102,6 +145,7 @@ function PANEL:CreateAddonInfo(data)
         img:SetWide(128)
         img:SetTall(128)
         img:SetImage("gui/noicon.png")
+        self:QueueWorkshopIcon(img, data.wsid)
 
         local name = vgui.Create("DLabel",pnl)
         name:SetText(data.title or data.file)
@@ -123,14 +167,14 @@ function PANEL:CreateAddonInfo(data)
         mnt:SetIcon(data.mounted and "icon16/cross.png" or "icon16/tick.png")
         mnt:SetText(data.mounted and "Disable" or "Enable")
         mnt.DoClick = function(s)
-            print("[Addon Mount]",data.file,!data.mounted)
+            print("[Addon Mount]", data.file, not data.mounted)
             local old = steamworks.ShouldMountAddon(data.wsid)
-            steamworks.SetShouldMountAddon(data.wsid,!data.mounted)
-            isours = true steamworks.ApplyAddons() isours = true
+            steamworks.SetShouldMountAddon(data.wsid, not ata.mounted)
+            steamworks.ApplyAddons()
             local new = steamworks.ShouldMountAddon(data.wsid)
 
-            if old==new then
-                print("Warning: ","could not toggle",data.file)
+            if old == new then
+                print("Warning: ", "could not toggle", data.file)
             else
                 data.mounted = new
 
@@ -168,17 +212,8 @@ function PANEL:CreateAddonInfo(data)
         ws:SetIcon("vgui/resource/icon_steam")
         ws:SetText("Workshop")
         ws.DoClick = function(s)
-            gui.OpenURL("http://steamcommunity.com/sharedfiles/filedetails/?id="..data.wsid)
+            gui.OpenURL("http://steamcommunity.com/sharedfiles/filedetails/?id=" .. data.wsid)
         end
-
-        steamworks.FileInfo(data.wsid,function(res)
-            steamworks.Download(res.previewid,true,function(name)
-                if IsValid(img) then
-                    img:SetMaterial(AddonMaterial(name))
-                end
-            end)
-        end)
-
         self.List:Add(pnl)
     end
 

@@ -1,10 +1,8 @@
-g_ServerName = ""
-g_MapName    = ""
-g_ServerURL  = ""
-g_MaxPlayers = ""
-g_SteamID    = ""
-
-_G.co_loadinfo = {name="",map="",gm=""}
+g_ServerName = g_ServerName or ""
+g_MapName    = g_MapName    or ""
+g_ServerURL  = g_ServerURL  or ""
+g_MaxPlayers = g_MaxPlayers or ""
+g_SteamID    = g_SteamID    or ""
 
 local PANEL = {}
 
@@ -24,11 +22,6 @@ end
 function PANEL:Paint() end
 
 function PANEL:OnActivate()
-    g_ServerName	= ""
-    g_MapName		= ""
-    g_ServerURL		= ""
-    g_MaxPlayers	= ""
-    g_SteamID		= ""
 end
 
 function PANEL:OnDeactivate()
@@ -82,8 +75,8 @@ function PANEL:RefreshDownloadables()
 	if ( iDownloading == 0 ) then return end
 
 
-	hook.Run("LoadingStatus", "Files Needed: "..iDownloading)
-	hook.Run("LoadingStatus", "Total Files: "..iFileCount)
+	hook.Run("LoadingStatus", "Files Needed: " .. iDownloading)
+	hook.Run("LoadingStatus", "Total Files: " .. iFileCount)
 	--self:RunJavascript( "if ( window.SetFilesNeeded ) SetFilesNeeded( " .. iDownloading .. ")" );
 	--self:RunJavascript( "if ( window.SetFilesTotal ) SetFilesTotal( " .. iFileCount .. ")" );
 
@@ -134,35 +127,35 @@ function UpdateLoadPanel( strJavascript )
 	print("UpdateLoadPanel",strJavascript)
 end
 
-function GameDetails( servername, serverurl, mapname, maxplayers, steamid, gm )
+function GameDetails( servername, serverurl, mapname, maxplayers, steamid, gm, ... )
 	if ( engine.IsPlayingDemo() ) then return end
 
-	--MsgN( "servername ",servername )
-	--MsgN( "serverurl ",serverurl )
-
-	hook.Run("LoadingStatus", "Name: "..servername)
-	hook.Run("LoadingStatus", "Loading URL: "..serverurl)
+	hook.Run("LoadingStatus", "Name: " .. servername)
+	hook.Run("LoadingStatus", "Loading URL: " .. serverurl)
 
 	serverurl = serverurl:Replace( "%s", steamid )
 	serverurl = serverurl:Replace( "%m", mapname )
 
-	g_ServerName	= servername
-	g_MapName		= mapname
-	g_ServerURL		= serverurl
-	g_MaxPlayers	= maxplayers
-	g_SteamID		= steamid
-	g_GameMode		= gm
+	if servername ~= "" then
+		g_ServerName = servername
+	end
+	if mapname ~= "" then
+		g_MapName = mapname
+	end
+	if serverurl ~= "" then
+		g_ServerURL = serverurl
+	end
+	if maxplayers ~= "" then
+		g_MaxPlayers = maxplayers
+	end
+	if steamid ~= "" then
+		g_SteamID = steamid
+	end
+	if gm ~= "" then
+		g_GameMode = gm
+	end
 
-	--MsgN( "gamemode ",gm )
-	--MsgN( "mapname ",mapname )
-	--MsgN( "maxplayers ",maxplayers )
-	--MsgN( "steamid ",steamid )
-
-	hook.Run("LoadingStatus", "Gamemode: "..gm)
-	hook.Run("LoadingStatus", "Map: "..mapname)
-	hook.Run("LoadingStatus", "Max Players: "..maxplayers)
-
-	_G.co_loadinfo.name = servername
-	_G.co_loadinfo.map = mapname
-	_G.co_loadinfo.gm = gm
+	hook.Run("LoadingStatus", "Gamemode: " .. gm)
+	hook.Run("LoadingStatus", "Map: " .. mapname)
+	hook.Run("LoadingStatus", "Max Players: " .. maxplayers)
 end

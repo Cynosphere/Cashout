@@ -206,6 +206,15 @@ function btnPlay:DoClick()
                             s.data.players = ret
                         end
                     end)
+                    serverlist.PingServer(_ip .. ":" .. port, function(ping, hostname, desc, map, players, maxplayers, bots, pw, lp, _, gm, __, accid)
+                        if s and s.data then
+                            s.data.ping = ping
+                            s.data.hostname = hostname
+                            s.data.map = map
+                            s.data.gamemode = desc and gm and Format("%s (%s)", desc, gm) or nil
+                            s.data.plystr = players and maxplayers and Format("%d/%d", players or 0, maxplayers or 0) or nil
+                        end
+                    end)
                 end
 
                 if s:IsHovered() then
@@ -216,10 +225,13 @@ function btnPlay:DoClick()
                     local x, y = f:GetWide() + 4, my
 
                     surface.SetFont("BudgetLabel")
+                    local _, th = surface.GetTextSize("W")
+
                     local ipS = "IP: " .. s.data.ip
-                    local ipW, ipH = surface.GetTextSize(ipS)
+                    local ipW = surface.GetTextSize(ipS)
+                    y = y + th + 2
                     s.data.width = math.max(s.data.width or 0, ipW + 2)
-                    s.data.height = math.max(s.data.height or 0, ipH + 2)
+                    s.data.height = math.max(s.data.height or 0, y)
 
                     surface.SetDrawColor(0, 0, 0, 192)
                     surface.DrawRect(x, y, s.data.width, s.data.height)
@@ -228,43 +240,96 @@ function btnPlay:DoClick()
                     surface.SetTextPos(x + 1, y + 1)
                     surface.DrawText(ipS)
 
+                    if s.data.hostname then
+                        surface.SetFont("BudgetLabel")
+                        surface.SetTextColor(255, 255, 255)
+                        local hW = surface.GetTextSize(s.data.hostname)
+                        y = y + th + 2
+                        surface.SetTextPos(x + 1, y + 1)
+                        surface.DrawText(s.data.hostname)
+                        s.data.width = math.max(s.data.width or 0, hW + 2)
+                        s.data.height = math.max(s.data.height or 0, y)
+                    end
+
+                    if s.data.gamemode then
+                        surface.SetFont("BudgetLabel")
+                        surface.SetTextColor(255, 255, 255)
+                        local gW = surface.GetTextSize(s.data.gamemode)
+                        y = y + th + 2
+                        surface.SetTextPos(x + 1, y + 1)
+                        surface.DrawText(s.data.gamemode)
+                        s.data.width = math.max(s.data.width or 0, gW + 2)
+                        s.data.height = math.max(s.data.height or 0, y)
+                    end
+
+                    if s.data.map and s.data.plystr then
+                        surface.SetFont("BudgetLabel")
+                        surface.SetTextColor(255, 255, 255)
+                        local mS = s.data.plystr .. " on " .. s.data.map
+                        local mW = surface.GetTextSize(mS)
+                        y = y + th + 2
+                        surface.SetTextPos(x + 1, y + 1)
+                        surface.DrawText(mS)
+                        s.data.width = math.max(s.data.width or 0, mW + 2)
+                        s.data.height = math.max(s.data.height or 0, y)
+                    end
+
+                    if s.data.ping then
+                        surface.SetFont("BudgetLabel")
+                        surface.SetTextColor(255, 255, 255)
+                        local pS = "Ping: " .. s.data.ping .. "ms"
+                        local pW = surface.GetTextSize(pS)
+                        y = y + th + 2
+                        surface.SetTextPos(x + 1, y + 1)
+                        surface.DrawText(pS)
+                        s.data.width = math.max(s.data.width or 0, pW + 2)
+                        s.data.height = math.max(s.data.height or 0, y)
+                    end
+
                     if s.data.players then
-                        for i, ply in ipairs(s.data.players) do
-                            surface.SetFont("BudgetLabel")
-                            local plName = ply.name
-                            local nameLen = surface.GetTextSize(plName)
-                            s.data.longestName = math.max(s.data.longestName or 0, nameLen)
+                        if #s.data.players > 0 then
+                            y = y + th + 2 + th + 2
+                            for i, ply in ipairs(s.data.players) do
+                                surface.SetFont("BudgetLabel")
+                                local plName = ply.name
+                                local nameLen = surface.GetTextSize(plName)
+                                s.data.longestName = math.max(s.data.longestName or 0, nameLen)
 
-                            local score = tostring(ply.score)
-                            local scoreLen = surface.GetTextSize(score)
-                            s.data.longestScore = math.max(s.data.longestScore or 0, scoreLen)
+                                local score = tostring(ply.score)
+                                local scoreLen = surface.GetTextSize(score)
+                                s.data.longestScore = math.max(s.data.longestScore or 0, scoreLen)
 
-                            local time = FormatTime(ply.time)
-                            local timeLen = surface.GetTextSize(time)
-                            s.data.longestTime = math.max(s.data.longestTime or 0, timeLen)
+                                local time = FormatTime(ply.time)
+                                local timeLen = surface.GetTextSize(time)
+                                s.data.longestTime = math.max(s.data.longestTime or 0, timeLen)
 
-                            surface.SetTextColor(255, 255, 255)
-                            surface.SetTextPos(x + 1, y + 1 + ipH + ((i - 1) * ipH))
-                            surface.DrawText(plName)
+                                surface.SetTextColor(255, 255, 255)
+                                surface.SetTextPos(x + 1, y + 1)
+                                surface.DrawText(plName)
 
-                            surface.SetTextPos(x + 1 + s.data.longestName + 16, y + 1 + ipH + ((i - 1) * ipH))
-                            surface.DrawText(score)
+                                surface.SetTextPos(x + 1 + s.data.longestName + 16, y + 1)
+                                surface.DrawText(score)
 
-                            surface.SetTextPos(x + 1 + s.data.longestName + s.data.longestScore + 32, y + 1 + ipH + ((i - 1) * ipH))
-                            surface.DrawText(time)
+                                surface.SetTextPos(x + 1 + s.data.longestName + s.data.longestScore + 32, y + 1)
+                                surface.DrawText(time)
+
+                                y = y + th + 2
+                                s.data.height = math.max(s.data.height or 0, y)
+                                s.data.width = math.max(s.data.width or 0, (s.data.longestName or 0) + (s.data.longestScore or 0) + (s.data.longestTime or 0) + 34)
+                            end
+                            y = y + 2
+                            s.data.height = math.max(s.data.height or 0, y)
                         end
-
-                        s.data.width = math.max(s.data.width or 0, (s.data.longestName or 0) + (s.data.longestScore or 0) + (s.data.longestTime or 0) + 34)
-                        s.data.height = math.max(s.data.height or 0, (#s.data.players > 0 and ipH or 0) + (#s.data.players * ipH) + 2)
                     else
                         surface.SetFont("BudgetLabel")
                         surface.SetTextColor(255, 255, 255)
-                        local qS = "<querying player data>"
+                        local qS = "<querying server data>"
                         local qW = surface.GetTextSize(qS)
-                        surface.SetTextPos(x + 1, y + 1 + ipH)
+                        surface.SetTextPos(x + 1, y + 1)
                         surface.DrawText(qS)
+                        y = y + 2
                         s.data.width = math.max(s.data.width or 0, qW + 2)
-                        s.data.height = math.max(s.data.height or 0, ipH * 2 + 2)
+                        s.data.height = math.max(s.data.height or 0, y)
                     end
                     DisableClipping(false)
                 end

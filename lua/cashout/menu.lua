@@ -1,4 +1,4 @@
-_G.CASHOUT_VERSION = "1.0.4"
+_G.CASHOUT_VERSION = "1.0.5-dev"
 _G.Cashout = {}
 
 -- Menu Functionality and Requirements

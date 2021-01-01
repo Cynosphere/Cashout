@@ -8,8 +8,8 @@ disabled = {
 
 for _,f in pairs(file.Find("lua/cashout/plugins/*","GAME")) do
     if disabled[f:gsub(".lua","")] then continue end
-    include("cashout/plugins/"..f)
-    pcount=pcount+1
+    include("cashout/plugins/" .. f)
+    pcount = pcount + 1
 end
 
-print("[Cashout] Loaded "..pcount.." plugins.")
+print("[Cashout] Loaded " .. pcount .. " plugins.")

@@ -12,13 +12,12 @@ include("menu/demo_to_video.lua")
 include("menu/motionsensor.lua")
 
 -- Our own menu things
+include("cashout/plugins.lua")
 include("cashout/loadingscreen.lua")
 include("cashout/main.lua")
 include("cashout/dev.lua") -- Developer tools like lua_find_menu and lua_run_menu
 include("cashout/workshop.lua") -- Custom workshop status
 include("cashout/favorites.lua")
-
-include("cashout/plugins.lua")
 
 print("Loaded Cashout v" .. CASHOUT_VERSION)
 concommand.Add("menu_reload", function()

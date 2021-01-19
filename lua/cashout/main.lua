@@ -419,6 +419,88 @@ function btnOptions:DoClick()
     dmenu:SetPos(x, y)
 end
 
+local function isBool(value)
+    return value == "true" or value == "false" or value == "1" or value == "0" or value == "yes" or value == "no"
+end
+
+local function toBool(value)
+    return value == "true" or value == "1" or value == "yes"
+end
+
+if Cashout.Plugins then
+    local btnPlugins = vgui.Create("DButton", nav)
+    btnPlugins:Dock(LEFT)
+    btnPlugins:SetWide(ScreenScaleH(85))
+    btnPlugins:SetText("")
+    btnPlugins.alpha = 128
+
+    function btnPlugins:Think()
+        if self:GetWide() ~= ScreenScaleH(85) then
+            self:SetWide(ScreenScaleH(85))
+            self:SetTall(self:GetParent():GetTall())
+        end
+    end
+
+    function btnPlugins:Paint(w, h)
+        self.alpha = Lerp(FrameTime() * 4, self.alpha, self.Hovered and 128 or 0)
+        draw.RoundedBox(0, 0, 0, w, h, Color(0, 255, 192, self.alpha))
+        draw.SimpleText("Plugins", "Cashout_LargeText", w / 2, h / 2, Color(255, 255, 255, self.alpha + 127), 1, 1)
+        surface.SetDrawColor(Color(255, 255, 255, self.alpha + 127))
+        surface.DrawLine(0, 0, 0, h)
+        surface.DrawLine(w - 1, 0, w - 1, h)
+    end
+
+    function btnPlugins:DoClick()
+        local m = DermaMenu()
+
+        local optList = {}
+
+        local function CreateOptList(plugin)
+            local sm, smi = m:AddSubMenu(plugin)
+            smi:SetIcon("icon16/folder_wrench.png")
+            optList[plugin] = {
+                SubMenu = sm,
+                Entry = smi,
+            }
+        end
+
+        for plugin, options in pairs(Cashout.Plugins.Options) do
+            if not optList[plugin] then CreateOptList(plugin) end
+            for option, value in pairs(options) do
+                local bool
+                if isBool(value) then
+                    bool = true
+                end
+
+                optList[plugin].SubMenu:AddOption(option, function()
+                    if bool ~= nil then
+                        Cashout.Plugins:SetOption(plugin, option, not toBool(value))
+                    else
+                        Derma_StringRequest(
+                        ("Editing Plugin Option: %s.%s"):format(plugin, option),
+                        "Enter a new value for the option",
+                        value,
+                        function(str)
+                            Cashout.Plugins:SetOption(plugin, option, str)
+                        end)
+                    end
+                end):SetIcon(bool ~= nil and (toBool(value) and "icon16/tick.png" or "icon16/cross.png") or "icon16/tag_blue_edit.png")
+            end
+        end
+
+        for plugin, options in pairs(Cashout.Plugins.MenuItems) do
+            if not optList[plugin] then CreateOptList(plugin) end
+            for option, func in pairs(options) do
+                optList[plugin].SubMenu:AddOption(option, func):SetIcon("icon16/application_xp_terminal.png")
+            end
+        end
+
+        m:Open()
+        local x, y = self:LocalToScreen(0, self:GetTall())
+        m:SetPos(x, y)
+    end
+end
+
 local exit = vgui.Create("DButton", nav)
 exit:Dock(RIGHT)
 exit:SetWide(ScreenScaleH(25))

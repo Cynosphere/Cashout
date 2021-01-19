@@ -404,6 +404,16 @@ function btnOptions:DoClick()
         CashoutOpenMounts()
     end):SetIcon("icon16/controller.png")
 
+    local l, li = dmenu:AddSubMenu("Language")
+    li:SetIcon("icon16/world.png")
+
+    for _, lang in ipairs(file.Find( "resource/localization/*.png", "MOD")) do
+        lang = lang:gsub("%.png$", "")
+        l:AddOption(lang, function()
+            RunConsoleCommand("gmod_language", lang)
+        end):SetIcon("../resource/localization/" .. lang .. ".png")
+    end
+
     dmenu:Open()
     local x, y = self:LocalToScreen(0, self:GetTall())
     dmenu:SetPos(x, y)

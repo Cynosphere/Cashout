@@ -75,6 +75,9 @@ for k, v in pairs(dir) do
     _G.mainMenu:ScreenshotScan("gamemodes/" .. v .. "/backgrounds/")
 end
 
+_G.pnlMainMenu = _G.mainMenu
+mainMenu.Call = function() end
+
 local mmPaint = mainMenu.Paint
 
 local nav = vgui.Create("EditablePanel", mainMenu)
@@ -413,6 +416,13 @@ function btnOptions:DoClick()
             RunConsoleCommand("gmod_language", lang)
         end):SetIcon("../resource/localization/" .. lang .. ".png")
     end
+
+    dmenu:AddSpacer()
+
+    dmenu:AddOption("Reload Menu", function()
+        include("includes/menu.lua")
+        hook.Run("MenuStart")
+    end):SetIcon("icon16/arrow_refresh.png")
 
     dmenu:Open()
     local x, y = self:LocalToScreen(0, self:GetTall())

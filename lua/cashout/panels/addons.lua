@@ -636,7 +636,7 @@ function PANEL:CreateAddonInfo(parent, data)
         pnl.mnt.DoClick = function(s)
             print("[Addon Mount]", data.file, not data.mounted)
             local old = steamworks.ShouldMountAddon(data.wsid)
-            steamworks.SetShouldMountAddon(data.wsid, not ata.mounted)
+            steamworks.SetShouldMountAddon(data.wsid, not data.mounted)
             steamworks.ApplyAddons()
             local new = steamworks.ShouldMountAddon(data.wsid)
 

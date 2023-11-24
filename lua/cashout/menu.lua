@@ -3,7 +3,6 @@ _G.Cashout = {}
 
 -- Menu Functionality and Requirements
 --include("menu/mount/mount.lua") -- Workshop
-include("menu/getmaps.lua") -- Map grabbing
 include("menu/openurl.lua") -- OpenURL changes as of sometime in 2017
 
 -- Stuff we probably won't use
@@ -18,6 +17,8 @@ include("cashout/main.lua")
 include("cashout/dev.lua") -- Developer tools like lua_find_menu and lua_run_menu
 include("cashout/workshop.lua") -- Custom workshop status
 include("cashout/favorites.lua")
+
+include("menu/getmaps.lua") -- Map grabbing
 
 print("Loaded Cashout v" .. CASHOUT_VERSION)
 concommand.Add("menu_reload", function()
